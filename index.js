@@ -6,7 +6,7 @@ class Traps {
    * Sets up local configuration
    */
   constructor() {
-    // { isContainer: boolean, selector: string, isActive?: boolean }
+    // { isContainer: boolean, selector: string, isActive?: boolean, autoFocus: string }
     // @TODO: this should be a map
     this.fTraplist = [];
   }
@@ -154,12 +154,20 @@ class Traps {
 
     // add event to the DOM
     document.addEventListener('keydown', trap.loopCallback);
+
+    if (trap.autoFocus) {
+      document.querySelector(trap.autoFocus).focus();
+    }
   }
 
   /**
    * Disables trap and returns DOM to its proper state
    */
   release() {
+    if (!this.activeTrap) {
+      return;
+    }
+
     // mark active trap as disabled
     this.activeTrap.isActive = false;
 
@@ -189,8 +197,8 @@ class Traps {
   /**
    * Creates a new trap
    */
-  setTrap(name, areas) {
-    this.fTraplist.push({ name, areas})
+  setTrap(config) {
+    this.fTraplist.push({ ...config});
   }
 
   /**
@@ -205,3 +213,13 @@ const traps = new Traps();
 Object.freeze(traps);
 
 // module.export = traps;
+
+traps.setTrap({ name: 'modal', areas: [{ isContainer: true, selector: '.modal'}], autoFocus: '.awesome'});
+
+document.querySelector('.close').addEventListener('click', () => {
+  traps.release();
+});
+
+document.querySelector('.menu').addEventListener('click', () => {
+  traps.trapWithin('modal');
+});
