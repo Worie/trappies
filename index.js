@@ -1,13 +1,14 @@
 /**
  * Trappy instance allows to trap keyboard focus to particular area temporary
  */
-class Trap {
+class Traps {
   /**
    * Sets up local configuration
    */
-  constructor(config) {
-    this.fConfig = config;
-    this.fKeyHandler = null;
+  constructor() {
+    // { isContainer: boolean, selector: string, isActive?: boolean }
+    // @TODO: this should be a map
+    this.fTraplist = [];
   }
 
   /**
@@ -42,12 +43,16 @@ class Trap {
    * Returns element that would be hidden considered current DOM state
    */
   get elementsToHide() {
+    if (!this.activeTrap) {
+      return [];
+    }
+
     // first, get all elements that can be focused
     return this.allFocusableElements
       // filter out those entries that we want to keep tabbable
       .filter(e => {
         // if element matches an area, that means that we cannot disable it
-        const matchesArea = this.fConfig.areas.some(area => {
+        const matchesArea = this.activeTrap.areas.some(area => {
           // if the area is a container and currently processed element is within such area,
           // consider it as one that we cannot touch as well
           if (area.isContainer && e.closest(area.selector)) {
@@ -87,6 +92,13 @@ class Trap {
   }
 
   /**
+   * Returns currently active trap
+   */
+  get activeTrap() {
+    return this.fTraplist.find(trap => trap.isActive === true);
+  }
+
+  /**
    * Returns all currently trapped elements
    */
   get hiddenElements() {
@@ -117,9 +129,17 @@ class Trap {
   /**
    * Enables trap based on passed config
    */
-  trapWithin() {
-    // make sure that other trappy instances are not running
-    this.releaseAllTraps();
+  trapWithin(name) {
+    // get object that matches the name
+    const trap = this.getTrap(name);
+    
+    if (this.activeTrap) {
+      // make sure that other trappy instances are not running
+      this.release();
+    }
+
+    // mark this trap as active
+    trap.isActive = true;
 
     // disable elements temporarly
     this.elementsToHide.forEach(e => {
@@ -130,16 +150,19 @@ class Trap {
     });
 
     // store instance of a function bound to this particular class
-    this.fKeyHandler = this.handleTrappedKeyDown.bind(this);
+    trap.loopCallback = this.handleTrappedKeyDown.bind(this);
 
     // add event to the DOM
-    document.addEventListener('keydown', this.fKeyHandler);
+    document.addEventListener('keydown', trap.loopCallback);
   }
 
   /**
    * Disables trap and returns DOM to its proper state
    */
-  releaseAllTraps() {
+  release() {
+    // mark active trap as disabled
+    this.activeTrap.isActive = false;
+
     // on all hidden elements, perform a clean up
     this.hiddenElements.forEach(e => {
       // if the original tabindex could not be determined, just remove it
@@ -154,7 +177,31 @@ class Trap {
       e.removeAttribute('data-trap-tabindex');
     });
 
-    // remove event from dom
-    document.removeEventListener('keydown', this.fKeyHandler);
+    // destroy all event listeners within all traps
+    this.fTraplist.forEach(trap => {
+      if (trap.loopCallback) {
+        // remove event from dom
+        document.removeEventListener('keydown', trap.loopCallback);
+      }
+    })
+  }
+
+  /**
+   * Creates a new trap
+   */
+  setTrap(name, areas) {
+    this.fTraplist.push({ name, areas})
+  }
+
+  /**
+   * Returns given trap object
+   */
+  getTrap(name) {
+    return this.fTraplist.find(trap => trap.name === name);
   }
 }
+
+const traps = new Traps();
+Object.freeze(traps);
+
+// module.export = traps;
