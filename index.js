@@ -214,12 +214,22 @@ Object.freeze(traps);
 
 // module.export = traps;
 
-traps.setTrap({ name: 'modal', areas: [{ isContainer: true, selector: '.modal'}], autoFocus: '.awesome'});
 
-document.querySelector('.close').addEventListener('click', () => {
-  traps.release();
-});
+// PoC
+
+traps.setTrap({ name: 'modal', areas: [{ isContainer: true, selector: '.modal'}], autoFocus: '.modal'});
 
 document.querySelector('.menu').addEventListener('click', () => {
+  document.querySelector('.dynamic').innerHTML = `<div class="modal" tabindex="-1">
+  <button class="close">close</button>
+  <input type="text" class="awesome">
+  <textarea>dsadasd</textarea>
+  </div>`;
+  document.querySelector('.close').addEventListener('click', () => {
+    traps.release();
+    const modal = document.querySelector('.modal');
+    modal.parentNode.removeChild(modal);
+    document.querySelector('.menu').focus();
+  });
   traps.trapWithin('modal');
 });
