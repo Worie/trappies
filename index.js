@@ -1,7 +1,7 @@
   /**
-   * Trappy instance allows to trap keyboard focus to particular area temporary
+   * Trappies instance allows to trap keyboard focus to particular area temporary
    */
-  class Traps {
+  class Trappies {
     /**
      * Sets up local configuration
      */
@@ -218,24 +218,4 @@
   const traps = new Traps();
   Object.freeze(traps);
 
-  // module.export = traps;
-
-
-  // PoC
-
-  traps.setTrap({ name: 'modal', areas: [{ isContainer: true, selector: '.modal'}], autoFocus: '.modal'});
-
-  document.querySelector('.menu').addEventListener('click', () => {
-    document.querySelector('.dynamic').innerHTML = `<div class="modal" tabindex="-1">
-    <button class="close">close</button>
-    <input type="text" class="awesome">
-    <textarea>dsadasd</textarea>
-    </div>`;
-    document.querySelector('.close').addEventListener('click', () => {
-      traps.release();
-      const modal = document.querySelector('.modal');
-      modal.parentNode.removeChild(modal);
-      document.querySelector('.menu').focus();
-    });
-    traps.trapWithin('modal');
-  });
+  module.export = traps;
