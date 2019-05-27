@@ -1,8 +1,14 @@
 {
   "name": "trappies",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Traps keyboard focus within given nodes",
-  "main": "index.js",
+  "main": "dist/index.js",
   "author": "Wojciech Połowniak",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "uglify-es": "^3.3.9"
+  },
+  "scripts": {
+    "uglify": "uglifyjs src/index.js --compress --mangle > dist/index.js"
+  }
 }
