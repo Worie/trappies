@@ -6,7 +6,13 @@
      * Sets up local configuration
      */
     constructor() {
-      // { isContainer: boolean, selector: string, isActive?: boolean, autoFocus: string, /consider/ triggerElement }
+      // singleTrap: { 
+      //   name: string,
+      //   isContainer: boolean,
+      //   selector: string,
+      //    isActive?: boolean,
+      //    autoFocus: string
+      //  }
       this.fTraplist = new Map();
     }
 
@@ -131,7 +137,6 @@
       }
     }
 
-
     /**
      * Enables trap based on passed config
      */
@@ -142,10 +147,9 @@
       if (this.activeTrap) {
         // make sure that other trappy instances are not running
         this.release();
-      }
+      };
 
-      // mark this trap as active
-      trap.isActive = true;
+      this._activate(trap);
 
       // disable elements temporarly
       this.elementsToHide.forEach(e => {
@@ -161,9 +165,38 @@
       // add event to the DOM
       document.addEventListener('keydown', trap.loopCallback);
 
+      // if autofocus is defined, apply it
       if (trap.autoFocus) {
-        document.querySelector(trap.autoFocus).focus();
+        const autoFocusedEl = document.querySelector(trap.autoFocus);
+
+        // fallback if element doesn't have tabindex attribute set
+        if (!autoFocusedEl.getAttribute('tabindex')) {
+          autoFocusedEl.setAttribute('tabindex', '-1');
+        }
+
+        autoFocusedEl.focus();
       }
+    }
+
+    /**
+     * Activates given trap and saves current active element as it's trigger
+     */
+    _activate(trap) {
+      // activate trap
+      trap.isActive = true;
+      // save trigger element - for later restoring it
+      trap.triggerElement = document.activeElement;
+    }
+
+    /**
+     * Deactivates given trap and restores previously focused element
+     */
+    _deactivate(trap) {
+      // mark active trap as disabled
+      trap.isActive = false;
+
+      // restores originally focused element
+      trap.triggerElement.focus();
     }
 
     /**
@@ -174,8 +207,8 @@
         return;
       }
 
-      // mark active trap as disabled
-      this.activeTrap.isActive = false;
+      // deactivates 
+      this._deactivate(this.activeTrap);
 
       // on all hidden elements, perform a clean up
       this.hiddenElements.forEach(e => {
@@ -204,7 +237,11 @@
      * Creates a new trap
      */
     setTrap(trap) {
-      this.fTraplist.set(trap.name, trap);
+      const defaultConfig = {
+        areas: [],
+      };
+
+      this.fTraplist.set(trap.name, { ...defaultConfig, ...trap});
     }
 
     /**
@@ -215,7 +252,4 @@
     }
   }
 
-  const traps = new Traps();
-  Object.freeze(traps);
-
-  module.export = traps;
+  module.exports = Trappies;
